@@ -49,7 +49,6 @@
     .dept-tab.active{color:#fff}
     .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
     .sum-card{background:#fff;border-radius:18px;padding:1.25rem 1.4rem;border:1.5px solid var(--border);box-shadow:var(--shadow-s);transition:box-shadow .2s,transform .2s;animation:fadeUp .4s ease both}
-    .sum-card:nth-child(2){animation-delay:.05s}.sum-card:nth-child(3){animation-delay:.1s}.sum-card:nth-child(4){animation-delay:.15s}
     .sum-card:hover{box-shadow:var(--shadow-m);transform:translateY(-2px)}
     @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
     .sum-label{font-size:.75rem;color:var(--text-sub);font-weight:600;letter-spacing:.04em;margin-bottom:.45rem}
@@ -72,7 +71,6 @@
     table{width:100%;border-collapse:collapse}
     thead th{padding:.75rem 1rem;text-align:left;font-size:.76rem;font-weight:700;color:var(--text-sub);letter-spacing:.05em;background:var(--pink-50);border-bottom:1.5px solid var(--border);white-space:nowrap}
     tbody tr{border-bottom:1px solid #fff5f9;transition:background .12s}
-    tbody tr:last-child{border-bottom:none}
     tbody tr:hover{background:#fff8fb}
     tbody td{padding:.85rem 1rem;font-size:.88rem;vertical-align:middle}
     .type-badge{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .6rem;border-radius:999px;font-size:.76rem;font-weight:600}
@@ -88,8 +86,6 @@
     .slip-btn:hover{background:var(--pink-100);border-color:var(--rose)}
     .no-slip{color:var(--border);font-size:.8rem}
     .table-empty{text-align:center;padding:3.5rem 2rem;color:var(--text-sub)}
-    .table-empty .icon{font-size:2.5rem;margin-bottom:.6rem}
-    .loading-msg td{text-align:center;padding:2rem;color:var(--text-sub)}
     .modal-backdrop{display:none;position:fixed;inset:0;z-index:300;background:rgba(61,28,46,.38);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:1rem}
     .modal-backdrop.open{display:flex}
     .modal{background:#fff;border-radius:24px;padding:2rem;width:100%;max-width:460px;box-shadow:var(--shadow-l);border:1.5px solid var(--border);animation:slideUp .22s ease;max-height:90vh;overflow-y:auto}
@@ -100,14 +96,13 @@
     .form-label{display:block;font-size:.82rem;font-weight:600;color:var(--text-sub);margin-bottom:.3rem;letter-spacing:.02em}
     .form-input{width:100%;padding:.6rem .95rem;border-radius:12px;border:1.5px solid var(--border);font-family:'Sarabun',sans-serif;font-size:.92rem;color:var(--text-main);outline:none;transition:border .2s;background:#fff}
     .form-input:focus{border-color:var(--rose)}
-    select.form-input{cursor:pointer}
     .form-row{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
     .modal-footer{display:flex;gap:.65rem;margin-top:1.4rem;justify-content:flex-end}
     .err-msg{color:var(--red);font-size:.8rem;margin-top:.4rem;display:none}
     .err-msg.show{display:block}
     .slip-modal{background:#fff;border-radius:24px;padding:1.5rem;width:100%;max-width:480px;box-shadow:var(--shadow-l);border:1.5px solid var(--border);animation:slideUp .22s ease}
     .slip-modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
-    @media(max-width:768px){.summary-grid{grid-template-columns:1fr 1fr}.logo-sub{display:none}thead th:nth-child(9),tbody td:nth-child(9){display:none}}
+    @media(max-width:768px){.summary-grid{grid-template-columns:1fr 1fr}.logo-sub{display:none}thead th:nth-child(8),tbody td:nth-child(8){display:none}}
     @media(max-width:520px){main{padding:1rem .75rem 4rem}.form-row{grid-template-columns:1fr}.logo-title{font-size:.85rem}}
   </style>
 </head>
@@ -125,7 +120,7 @@
       <div class="logo-fallback" id="lf">🏕️</div>
       <div>
         <div class="logo-title">ค่ายหล่อ(ว์)เกียร์ Intania ครั้งที่ 12</div>
-        <div class="logo-sub">ระบบบัญชีการเงิน — ดูได้ทุกคน แก้ไขได้เฉพาะการเงิน</div>
+        <div class="logo-sub">ระบบบัญชีการเงิน — อัปโหลดสลิปได้ทันที</div>
       </div>
     </div>
     <div class="header-spacer"></div>
@@ -222,7 +217,7 @@
 <div class="modal-backdrop" id="addModal">
   <div class="modal">
     <div class="modal-title">➕ เพิ่มรายการการเงิน</div>
-    <div class="modal-sub">บันทึกรายการใหม่เข้า Google Sheets ของฝ่ายที่เลือก</div>
+    <div class="modal-sub">ถ่ายรูปหรือเลือกสลิปจากมือถือเพื่อบันทึก</div>
     <div class="form-row">
       <div class="form-group">
         <label class="form-label">วันที่ *</label>
@@ -248,10 +243,13 @@
       <label class="form-label">จำนวนเงิน (฿) *</label>
       <input type="number" class="form-input" id="eAmount" placeholder="0.00" min="0" step="0.01">
     </div>
+    
     <div class="form-group">
-      <label class="form-label">ลิงก์สลิป (Google Drive)</label>
-      <input type="url" class="form-input" id="eSlip" placeholder="https://drive.google.com/...">
+      <label class="form-label">อัปโหลดสลิป (รูปภาพ)</label>
+      <input type="file" class="form-input" id="eFile" accept="image/*">
+      <p style="font-size: 0.7rem; color: var(--text-sub); margin-top: 4px;">* ถ่ายภาพจากกล้องหรือเลือกจากอัลบั้มได้เลย</p>
     </div>
+
     <div class="form-group">
       <label class="form-label">หมายเหตุ</label>
       <input type="text" class="form-input" id="eNote" placeholder="(ไม่บังคับ)">
@@ -259,7 +257,7 @@
     <div class="err-msg" id="addErr">❌ กรุณากรอกข้อมูลให้ครบถ้วน</div>
     <div class="modal-footer">
       <button class="btn btn-outline" onclick="closeModal('addModal')">ยกเลิก</button>
-      <button class="btn btn-primary" id="saveBtn" onclick="saveEntry()">💾 บันทึก</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveEntry()">💾 บันทึกและอัปโหลด</button>
     </div>
   </div>
 </div>
@@ -271,8 +269,8 @@
       <button class="btn btn-ghost" onclick="closeModal('slipModal')">✕</button>
     </div>
     <div style="text-align:center">
-      <a id="slipLink" href="#" target="_blank" class="btn btn-primary">🔗 เปิดใน Google Drive</a>
-      <p style="color:var(--text-sub);font-size:.82rem;margin-top:.75rem">คลิกปุ่มด้านบนเพื่อดูสลิปใน Google Drive</p>
+      <a id="slipLink" href="#" target="_blank" class="btn btn-primary">🔗 เปิดดูสลิป</a>
+      <p style="color:var(--text-sub);font-size:.82rem;margin-top:.75rem">เปิดดูหลักฐานการโอนเงินในแท็บใหม่</p>
     </div>
   </div>
 </div>
@@ -281,21 +279,17 @@
 /* ══ CONFIG ══ */
 const CONFIG = {
   ADMIN_PASSWORD: 'lgi12',
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbwP8tfmUB9xr-2OBJPF_QmdYoDHZhhJvcSNWFJ2G7Nubf4WrFyKxsryAA1kCNRdVE_Y/exec',
+  // ตรวจสอบว่า URL นี้ตรงกับ Web App URL ที่คุณ Deploy ใน Apps Script
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbyf1N7Lu0Bl4EImvpNi-8h7v4cx3gvEjsjYoXev6I-oqw1f0Cr7VIiDDuyE-UhG0bqE/exec',
   DEPTS: [
-    { name:'ทุกฝ่าย',                sheetId:'',                sheetName:'',                color:'#f472b6', emoji:'🌸' },
-    { name:'ฝ่ายการเงิน',               sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายการเงิน',   color:'#f472b6', emoji:'💰' },
-    { name:'ฝ่ายสถานที่',               sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสถานที่',   color:'#60a5fa', emoji:'🏕️' },
-    { name:'ฝ่ายสันทนาการ',             sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสันทนาการ', color:'#fb923c', emoji:'🎮' },
+    { name:'ทุกฝ่าย', sheetId:'', sheetName:'', color:'#f472b6', emoji:'🌸' },
+    { name:'ฝ่ายการเงิน', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายการเงิน', color:'#f472b6', emoji:'💰' },
+    { name:'ฝ่ายสถานที่', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสถานที่', color:'#60a5fa', emoji:'🏕️' },
+    { name:'ฝ่ายสันทนาการ', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสันทนาการ', color:'#fb923c', emoji:'🎮' },
     { name:'ฝ่ายสวัสดิการ', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสวัสดิการ', color:'#34d399', emoji:'🍱' },
     { name:'ฝ่ายพยาบาล', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายพยาบาล', color:'#f87171', emoji:'🏥' },
     { name:'ฝ่ายมินิมาร์ทและจัดหาทุน', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายมินิมาร์ทและจัดหาทุน', color:'#a78bfa', emoji:'🛒' },
-    { 
-      name: 'ฝ่ายวิชาการ', 
-      sheetId: '1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', 
-      sheetName: 'ฝ่ายวิชาการ', 
-      color: '#2dd4bf', emoji: '📚' 
-    },
+    { name:'ฝ่ายวิชาการ', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายวิชาการ', color:'#2dd4bf', emoji:'📚' },
   ]
 };
 
@@ -335,12 +329,11 @@ function buildDeptSelect(){
     `<option value="${i+1}">${d.emoji} ${d.name}</option>`).join('');
 }
 
-// FIXED: เพิ่มการระบุ index ฝ่ายให้แม่นยำ
 async function loadData(){
-  document.getElementById('tableBody').innerHTML='<tr class="loading-msg"><td colspan="9">⏳ กำลังโหลดข้อมูล...</td></tr>';
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML='<tr class="loading-msg"><td colspan="9">⏳ กำลังโหลดข้อมูล...</td></tr>';
   allData=[];
   if(activeDept===0){
-    // ดึงทุกฝ่าย และระบุ i+1 เพื่อให้ deptIdx ตรงกับ Array จริง
     const r=await Promise.all(CONFIG.DEPTS.slice(1).map((d,i)=>fetchSheet(d.sheetId,d.sheetName,i+1)));
     allData=r.flat().sort((a,b)=>(a.rawDate||0)-(b.rawDate||0));
   } else {
@@ -350,7 +343,6 @@ async function loadData(){
   updateHeader(); updateSummary(); renderTable();
 }
 
-// FIXED: รับค่า deptIdx และใช้ Cache Buster เพื่อป้องกัน Browser จำค่าเก่า
 async function fetchSheet(sheetId,sheetName,deptIdx){
   if(!sheetId||sheetId.startsWith('YOUR')) return [];
   try{
@@ -372,7 +364,7 @@ async function fetchSheet(sheetId,sheetName,deptIdx){
         balance:parseFloat(c[5]?.v)||0,
         slip:c[6]?.v||'',
         note:c[7]?.v||'',
-        deptIdx: deptIdx // บันทึกไว้ว่ามาจากฝ่ายไหน
+        deptIdx: deptIdx
       };
     }).filter(r=>r.name);
   }catch(e){
@@ -415,7 +407,6 @@ function renderTable(){
   const tbody=document.getElementById('tableBody');
   if(!f.length){tbody.innerHTML='<tr><td colspan="9"><div class="table-empty"><div class="icon">🌸</div><div>ไม่พบรายการ</div></div></td></tr>';return;}
   tbody.innerHTML=f.map((r,i)=>{
-    // ดึงสีที่ถูกต้องตาม deptIdx ที่ระบุไว้ในแต่ละแถว
     const dc=CONFIG.DEPTS[r.deptIdx]?.color||'#f472b6';
     const dot=activeDept===0?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dc};margin-right:5px;vertical-align:middle"></span>`:'';
     return `<tr>
@@ -437,7 +428,6 @@ function openSlip(url,e){e.preventDefault();document.getElementById('slipLink').
 function exportSheet(){
   const d=CONFIG.DEPTS[activeDept];
   const sid=activeDept===0?CONFIG.DEPTS[1].sheetId:d.sheetId;
-  if(!sid||sid.startsWith('YOUR')){alert('กรุณาตั้งค่า SHEET_ID ก่อนครับ');return;}
   window.open(`https://docs.google.com/spreadsheets/d/${sid}/edit`,'_blank');
 }
 
@@ -458,33 +448,67 @@ function updateAdminUI(){
 
 function openAddModal(){
   document.getElementById('eDate').value=todayStr();
-  ['eName','eAmount','eSlip','eNote'].forEach(id=>document.getElementById(id).value='');
+  ['eName','eAmount','eFile','eNote'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('addErr').classList.remove('show');
   if(activeDept>0)document.getElementById('eDept').value=activeDept;
   openModal('addModal');
 }
 
+/* แก้ไขฟังก์ชันบันทึกข้อมูลเพื่อส่งเป็น FormData สำหรับอัปโหลดไฟล์ */
 async function saveEntry(){
   const date=document.getElementById('eDate').value;
   const type=document.getElementById('eType').value;
   const deptI=parseInt(document.getElementById('eDept').value);
   const name=document.getElementById('eName').value.trim();
   const amount=parseFloat(document.getElementById('eAmount').value);
-  const slip=document.getElementById('eSlip').value.trim();
+  const fileInput=document.getElementById('eFile');
   const note=document.getElementById('eNote').value.trim();
+
   if(!date||!name||isNaN(amount)||amount<=0){document.getElementById('addErr').classList.add('show');return;}
+  
   const btn=document.getElementById('saveBtn');
-  btn.textContent='⏳ กำลังบันทึก...';btn.disabled=true;
+  btn.textContent='⏳ กำลังอัปโหลดและบันทึก...';btn.disabled=true;
+  
   try{
     const d=CONFIG.DEPTS[deptI];
-    const income=type==='รายรับ'?amount:0,expense=type==='รายจ่าย'?amount:0;
-    const params=new URLSearchParams({date,type,name,income,expense,slip,note,sheetId:d.sheetId,sheetName:d.sheetName});
-    const res=await fetch(CONFIG.SCRIPT_URL+'?'+params.toString());
+    const income=type==='รายรับ'?amount:0, expense=type==='รายจ่าย'?amount:0;
+
+    // ใช้ FormData แทนการส่ง URLSearchParams เพื่อรองรับการส่งไฟล์
+    const formData = new FormData();
+    formData.append('date', date);
+    formData.append('type', type);
+    formData.append('name', name);
+    formData.append('income', income);
+    formData.append('expense', expense);
+    formData.append('note', note);
+    formData.append('sheetId', d.sheetId);
+    formData.append('sheetName', d.sheetName);
+
+    // ถ้ามีการเลือกไฟล์ ให้แนบไฟล์ไปด้วย
+    if(fileInput.files.length > 0) {
+      formData.append('file', fileInput.files[0]);
+    }
+
+    const res=await fetch(CONFIG.SCRIPT_URL, {
+      method: 'POST',
+      body: formData // ส่งเป็น Multipart/form-data
+    });
+    
     const result=await res.json();
-    if(result.status==='ok'){closeModal('addModal');activeDept=deptI;switchDept(deptI);}
-    else throw new Error(result.message||'บันทึกไม่สำเร็จ');
-  }catch(e){const el=document.getElementById('addErr');el.textContent='❌ '+(e.message||'เกิดข้อผิดพลาด');el.classList.add('show');}
-  finally{btn.textContent='💾 บันทึก';btn.disabled=false;}
+    if(result.status==='ok'){
+      closeModal('addModal');
+      activeDept=deptI;
+      switchDept(deptI);
+    } else {
+      throw new Error(result.message||'บันทึกไม่สำเร็จ');
+    }
+  }catch(e){
+    const el=document.getElementById('addErr');
+    el.textContent='❌ '+(e.message||'เกิดข้อผิดพลาดในการอัปโหลด');
+    el.classList.add('show');
+  } finally {
+    btn.textContent='💾 บันทึกและอัปโหลด';btn.disabled=false;
+  }
 }
 
 function openModal(id){document.getElementById(id).classList.add('open');}
