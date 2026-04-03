@@ -279,7 +279,7 @@
 /* ══ CONFIG ══ */
 const CONFIG = {
   ADMIN_PASSWORD: 'lgi12',
-  // ตรวจสอบว่า URL นี้ตรงกับ Web App URL ที่คุณ Deploy ใน Apps Script
+  // ตรวจสอบว่า URL นี้ตรงกับ Web App URL ล่าสุดของคุณ
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxqsl3jVDehjGLVhBdJ7bIM0OpT6f3R0aYhtMJ3tkW7JzvJ4_tEO_Bgrtf527aPbauo/exec',
   DEPTS: [
     { name:'ทุกฝ่าย', sheetId:'', sheetName:'', color:'#f472b6', emoji:'🌸' },
@@ -350,9 +350,12 @@ async function fetchSheet(sheetId,sheetName,deptIdx){
     const res=await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&t=${cacheBuster}`);
     const text=await res.text();
     const json=JSON.parse(text.substring(47,text.length-2));
+    
     return (json.table.rows||[]).map((row,i)=>{
       const c=row.c;
       const rd=parseGDate(c[0]?.v);
+      
+      // ดึงค่าจากคอลัมน์ G (Index 6)
       return {
         idx:i+1,
         rawDate:rd?rd.getTime():0,
@@ -368,7 +371,7 @@ async function fetchSheet(sheetId,sheetName,deptIdx){
       };
     }).filter(r=>r.name);
   }catch(e){
-    console.error(e);
+    console.error("Fetch Error:", e);
     return [];
   }
 }
@@ -417,13 +420,16 @@ function renderTable(){
       <td class="amt-in">${r.income>0?'+฿'+fmt(r.income):'<span style="color:var(--border)">—</span>'}</td>
       <td class="amt-out">${r.expense>0?'-฿'+fmt(r.expense):'<span style="color:var(--border)">—</span>'}</td>
       <td class="amt-bal">฿${fmt(r.balance)}</td>
-      <td>${r.slip?`<a class="slip-btn" href="#" onclick="openSlip('${r.slip}',event)">🧾 สลิป</a>`:'<span class="no-slip">—</span>'}</td>
+      <td>${r.slip && r.slip.startsWith('http') ? `<a class="slip-btn" href="#" onclick="openSlip('${r.slip}',event)">🧾 สลิป</a>` : '<span class="no-slip">—</span>'}</td>
       <td class="cell-note">${r.note||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-function openSlip(url,e){e.preventDefault();document.getElementById('slipLink').href=url;openModal('slipModal');}
+function openSlip(url,e){
+  e.preventDefault();
+  window.open(url, '_blank');
+}
 
 function exportSheet(){
   const d=CONFIG.DEPTS[activeDept];
@@ -454,26 +460,31 @@ function openAddModal(){
   openModal('addModal');
 }
 
-/* แก้ไขฟังก์ชันบันทึกข้อมูลเพื่อส่งเป็น FormData สำหรับอัปโหลดไฟล์ */
+/* 🔥 แก้ไขฟังก์ชันบันทึกเพื่อรองรับการอัปโหลดไฟล์และรีโหลดข้อมูล 🔥 */
 async function saveEntry(){
   const date=document.getElementById('eDate').value;
   const type=document.getElementById('eType').value;
-  const deptI=parseInt(document.getElementById('eDept').value);
+  const deptIdx=parseInt(document.getElementById('eDept').value);
   const name=document.getElementById('eName').value.trim();
   const amount=parseFloat(document.getElementById('eAmount').value);
   const fileInput=document.getElementById('eFile');
   const note=document.getElementById('eNote').value.trim();
 
-  if(!date||!name||isNaN(amount)||amount<=0){document.getElementById('addErr').classList.add('show');return;}
+  if(!date||!name||isNaN(amount)||amount<=0){
+    document.getElementById('addErr').classList.add('show');
+    return;
+  }
   
   const btn=document.getElementById('saveBtn');
-  btn.textContent='⏳ กำลังอัปโหลดและบันทึก...';btn.disabled=true;
+  const originalBtnText = btn.textContent;
+  btn.textContent='⏳ กำลังอัปโหลดและบันทึก...';
+  btn.disabled=true;
   
   try{
-    const d=CONFIG.DEPTS[deptI];
-    const income=type==='รายรับ'?amount:0, expense=type==='รายจ่าย'?amount:0;
+    const d=CONFIG.DEPTS[deptIdx];
+    const income=type==='รายรับ'?amount:0;
+    const expense=type==='รายจ่าย'?amount:0;
 
-    // ใช้ FormData แทนการส่ง URLSearchParams เพื่อรองรับการส่งไฟล์
     const formData = new FormData();
     formData.append('date', date);
     formData.append('type', type);
@@ -484,30 +495,34 @@ async function saveEntry(){
     formData.append('sheetId', d.sheetId);
     formData.append('sheetName', d.sheetName);
 
-    // ถ้ามีการเลือกไฟล์ ให้แนบไฟล์ไปด้วย
+    // แนบไฟล์รูปภาพ
     if(fileInput.files.length > 0) {
       formData.append('file', fileInput.files[0]);
     }
 
     const res=await fetch(CONFIG.SCRIPT_URL, {
       method: 'POST',
-      body: formData // ส่งเป็น Multipart/form-data
+      body: formData 
     });
     
     const result=await res.json();
     if(result.status==='ok'){
       closeModal('addModal');
-      activeDept=deptI;
-      switchDept(deptI);
+      // รีเฟรชข้อมูลในตารางทันที
+      activeDept = deptIdx;
+      switchDept(deptIdx); 
+      await loadData(); 
+      alert('บันทึกสำเร็จ!');
     } else {
-      throw new Error(result.message||'บันทึกไม่สำเร็จ');
+      throw new Error(result.message || 'บันทึกไม่สำเร็จ');
     }
   }catch(e){
     const el=document.getElementById('addErr');
     el.textContent='❌ '+(e.message||'เกิดข้อผิดพลาดในการอัปโหลด');
     el.classList.add('show');
   } finally {
-    btn.textContent='💾 บันทึกและอัปโหลด';btn.disabled=false;
+    btn.textContent=originalBtnText;
+    btn.disabled=false;
   }
 }
 
