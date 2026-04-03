@@ -203,7 +203,6 @@
   </div>
 </main>
 
-<!-- LOGIN -->
 <div class="modal-backdrop" id="loginModal">
   <div class="modal">
     <div class="modal-title">🔐 เข้าสู่ระบบ Admin</div>
@@ -220,7 +219,6 @@
   </div>
 </div>
 
-<!-- ADD -->
 <div class="modal-backdrop" id="addModal">
   <div class="modal">
     <div class="modal-title">➕ เพิ่มรายการการเงิน</div>
@@ -266,7 +264,6 @@
   </div>
 </div>
 
-<!-- SLIP -->
 <div class="modal-backdrop" id="slipModal">
   <div class="slip-modal">
     <div class="slip-modal-head">
@@ -286,7 +283,7 @@ const CONFIG = {
   ADMIN_PASSWORD: 'lgi12',
   SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbzNGpl9vcPiD2qisWvv1ASx3Mp8APLlHDhM6LiKB7ATmzhs3eUTeyI8pr_IdY6yxFD1/exec',
   DEPTS: [
-    { name:'ทุกฝ่าย',                   sheetId:'',                sheetName:'',          color:'#f472b6', emoji:'🌸' },
+    { name:'ทุกฝ่าย',                sheetId:'',                sheetName:'',                color:'#f472b6', emoji:'🌸' },
     { name:'ฝ่ายการเงิน',               sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายการเงิน',   color:'#f472b6', emoji:'💰' },
     { name:'ฝ่ายสถานที่',               sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสถานที่',   color:'#60a5fa', emoji:'🏕️' },
     { name:'ฝ่ายสันทนาการ',             sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายสันทนาการ', color:'#fb923c', emoji:'🎮' },
@@ -295,7 +292,7 @@ const CONFIG = {
     { 
       name: 'ฝ่ายวิชาการ', 
       sheetId: '1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', 
-      sheetName: 'ฝ่ายวิชาการ', // <--- ต้องตรงกับ Tab "ฝ่ายวิชาการ" เท่านั้น
+      sheetName: 'ฝ่ายวิชาการ', 
       color: '#2dd4bf', emoji: '📚' 
     },
   ]
@@ -337,10 +334,12 @@ function buildDeptSelect(){
     `<option value="${i+1}">${d.emoji} ${d.name}</option>`).join('');
 }
 
+// FIXED: เพิ่มการระบุ index ฝ่ายให้แม่นยำ
 async function loadData(){
   document.getElementById('tableBody').innerHTML='<tr class="loading-msg"><td colspan="9">⏳ กำลังโหลดข้อมูล...</td></tr>';
   allData=[];
   if(activeDept===0){
+    // ดึงทุกฝ่าย และระบุ i+1 เพื่อให้ deptIdx ตรงกับ Array จริง
     const r=await Promise.all(CONFIG.DEPTS.slice(1).map((d,i)=>fetchSheet(d.sheetId,d.sheetName,i+1)));
     allData=r.flat().sort((a,b)=>(a.rawDate||0)-(b.rawDate||0));
   } else {
@@ -350,20 +349,35 @@ async function loadData(){
   updateHeader(); updateSummary(); renderTable();
 }
 
+// FIXED: รับค่า deptIdx และใช้ Cache Buster เพื่อป้องกัน Browser จำค่าเก่า
 async function fetchSheet(sheetId,sheetName,deptIdx){
   if(!sheetId||sheetId.startsWith('YOUR')) return [];
   try{
-    const res=await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}`);
+    const cacheBuster = new Date().getTime();
+    const res=await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&t=${cacheBuster}`);
     const text=await res.text();
     const json=JSON.parse(text.substring(47,text.length-2));
     return (json.table.rows||[]).map((row,i)=>{
       const c=row.c;
       const rd=parseGDate(c[0]?.v);
-      return {idx:i+1,rawDate:rd?rd.getTime():0,date:rd?rd.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'-',
-        type:c[1]?.v||'',name:c[2]?.v||'',income:parseFloat(c[3]?.v)||0,expense:parseFloat(c[4]?.v)||0,
-        balance:parseFloat(c[5]?.v)||0,slip:c[6]?.v||'',note:c[7]?.v||'',deptIdx};
+      return {
+        idx:i+1,
+        rawDate:rd?rd.getTime():0,
+        date:rd?rd.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'-',
+        type:c[1]?.v||'',
+        name:c[2]?.v||'',
+        income:parseFloat(c[3]?.v)||0,
+        expense:parseFloat(c[4]?.v)||0,
+        balance:parseFloat(c[5]?.v)||0,
+        slip:c[6]?.v||'',
+        note:c[7]?.v||'',
+        deptIdx: deptIdx // บันทึกไว้ว่ามาจากฝ่ายไหน
+      };
     }).filter(r=>r.name);
-  }catch{return [];}
+  }catch(e){
+    console.error(e);
+    return [];
+  }
 }
 
 function parseGDate(v){
@@ -400,6 +414,7 @@ function renderTable(){
   const tbody=document.getElementById('tableBody');
   if(!f.length){tbody.innerHTML='<tr><td colspan="9"><div class="table-empty"><div class="icon">🌸</div><div>ไม่พบรายการ</div></div></td></tr>';return;}
   tbody.innerHTML=f.map((r,i)=>{
+    // ดึงสีที่ถูกต้องตาม deptIdx ที่ระบุไว้ในแต่ละแถว
     const dc=CONFIG.DEPTS[r.deptIdx]?.color||'#f472b6';
     const dot=activeDept===0?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dc};margin-right:5px;vertical-align:middle"></span>`:'';
     return `<tr>
