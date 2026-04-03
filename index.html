@@ -113,10 +113,7 @@
 <header>
   <div class="header-inner">
     <div class="logo-wrap">
-      <img class="logo-img"
-        src="https://drive.google.com/thumbnail?id=1JkF6t_Pb-NiergzLbKXBTz0P43CebXNi&sz=w200"
-        alt="โลโก้ค่าย"
-        onerror="this.style.display='none';document.getElementById('lf').style.display='flex'">
+      <img class="logo-img" src="https://drive.google.com/thumbnail?id=1JkF6t_Pb-NiergzLbKXBTz0P43CebXNi&sz=w200" alt="โลโก้ค่าย" onerror="this.style.display='none';document.getElementById('lf').style.display='flex'">
       <div class="logo-fallback" id="lf">🏕️</div>
       <div>
         <div class="logo-title">ค่ายหล่อ(ว์)เกียร์ Intania ครั้งที่ 12</div>
@@ -243,13 +240,11 @@
       <label class="form-label">จำนวนเงิน (฿) *</label>
       <input type="number" class="form-input" id="eAmount" placeholder="0.00" min="0" step="0.01">
     </div>
-    
     <div class="form-group">
       <label class="form-label">อัปโหลดสลิป (รูปภาพ)</label>
       <input type="file" class="form-input" id="eFile" accept="image/*">
       <p style="font-size: 0.7rem; color: var(--text-sub); margin-top: 4px;">* ถ่ายภาพจากกล้องหรือเลือกจากอัลบั้มได้เลย</p>
     </div>
-
     <div class="form-group">
       <label class="form-label">หมายเหตุ</label>
       <input type="text" class="form-input" id="eNote" placeholder="(ไม่บังคับ)">
@@ -262,25 +257,10 @@
   </div>
 </div>
 
-<div class="modal-backdrop" id="slipModal">
-  <div class="slip-modal">
-    <div class="slip-modal-head">
-      <div class="modal-title">🧾 สลิปการโอนเงิน</div>
-      <button class="btn btn-ghost" onclick="closeModal('slipModal')">✕</button>
-    </div>
-    <div style="text-align:center">
-      <a id="slipLink" href="#" target="_blank" class="btn btn-primary">🔗 เปิดดูสลิป</a>
-      <p style="color:var(--text-sub);font-size:.82rem;margin-top:.75rem">เปิดดูหลักฐานการโอนเงินในแท็บใหม่</p>
-    </div>
-  </div>
-</div>
-
 <script>
-/* ══ CONFIG ══ */
 const CONFIG = {
   ADMIN_PASSWORD: 'lgi12',
-  // ตรวจสอบว่า URL นี้ตรงกับ Web App URL ล่าสุดของคุณ
-  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxqsl3jVDehjGLVhBdJ7bIM0OpT6f3R0aYhtMJ3tkW7JzvJ4_tEO_Bgrtf527aPbauo/exec',
+  SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbz4nbjt7EQDHhzbnfhdeXJzepED8BnUKkPJn9TCsWqtY7AgeWEs4UH34nFLWYOw_8W2/exec',
   DEPTS: [
     { name:'ทุกฝ่าย', sheetId:'', sheetName:'', color:'#f472b6', emoji:'🌸' },
     { name:'ฝ่ายการเงิน', sheetId:'1vue2VP7C7Qba_tEeebQEgdERyhY1JK_FQEjeTR4GHEY', sheetName:'ฝ่ายการเงิน', color:'#f472b6', emoji:'💰' },
@@ -306,9 +286,7 @@ function todayStr(){return new Date().toISOString().split('T')[0];}
 
 function buildTabs(){
   document.getElementById('deptTabs').innerHTML=CONFIG.DEPTS.map((d,i)=>`
-    <button class="dept-tab ${i===0?'active':''}"
-      style="${i===0?`background:${d.color};border-color:${d.color}`:''}"
-      onclick="switchDept(${i})" data-i="${i}">
+    <button class="dept-tab ${i===0?'active':''}" style="${i===0?`background:${d.color};border-color:${d.color};color:#fff`:''}" onclick="switchDept(${i})" data-i="${i}">
       <span class="dot" style="background:${i===0?'rgba(255,255,255,.7)':d.color}"></span>
       ${d.emoji} ${d.name}
     </button>`).join('');
@@ -325,8 +303,7 @@ function switchDept(i){
 }
 
 function buildDeptSelect(){
-  document.getElementById('eDept').innerHTML=CONFIG.DEPTS.slice(1).map((d,i)=>
-    `<option value="${i+1}">${d.emoji} ${d.name}</option>`).join('');
+  document.getElementById('eDept').innerHTML=CONFIG.DEPTS.slice(1).map((d,i)=>`<option value="${i+1}">${d.emoji} ${d.name}</option>`).join('');
 }
 
 async function loadData(){
@@ -344,36 +321,24 @@ async function loadData(){
 }
 
 async function fetchSheet(sheetId,sheetName,deptIdx){
-  if(!sheetId||sheetId.startsWith('YOUR')) return [];
+  if(!sheetId) return [];
   try{
     const cacheBuster = new Date().getTime();
     const res=await fetch(`https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(sheetName)}&t=${cacheBuster}`);
     const text=await res.text();
     const json=JSON.parse(text.substring(47,text.length-2));
-    
     return (json.table.rows||[]).map((row,i)=>{
       const c=row.c;
       const rd=parseGDate(c[0]?.v);
-      
-      // ดึงค่าจากคอลัมน์ G (Index 6)
       return {
-        idx:i+1,
-        rawDate:rd?rd.getTime():0,
+        idx:i+1, rawDate:rd?rd.getTime():0,
         date:rd?rd.toLocaleDateString('th-TH',{year:'numeric',month:'short',day:'numeric'}):'-',
-        type:c[1]?.v||'',
-        name:c[2]?.v||'',
-        income:parseFloat(c[3]?.v)||0,
-        expense:parseFloat(c[4]?.v)||0,
-        balance:parseFloat(c[5]?.v)||0,
-        slip:c[6]?.v||'',
-        note:c[7]?.v||'',
-        deptIdx: deptIdx
+        type:c[1]?.v||'', name:c[2]?.v||'',
+        income:parseFloat(c[3]?.v)||0, expense:parseFloat(c[4]?.v)||0, balance:parseFloat(c[5]?.v)||0,
+        slip:c[6]?.v||'', note:c[7]?.v||'', deptIdx: deptIdx
       };
     }).filter(r=>r.name);
-  }catch(e){
-    console.error("Fetch Error:", e);
-    return [];
-  }
+  }catch(e){return [];}
 }
 
 function parseGDate(v){
@@ -408,59 +373,24 @@ function renderTable(){
   const f=allData.filter(r=>(!s||r.name.toLowerCase().includes(s)||r.note.toLowerCase().includes(s))&&(!t||r.type===t));
   document.getElementById('rowCount').textContent=`แสดง ${f.length} / ${allData.length} รายการ`;
   const tbody=document.getElementById('tableBody');
-  if(!f.length){tbody.innerHTML='<tr><td colspan="9"><div class="table-empty"><div class="icon">🌸</div><div>ไม่พบรายการ</div></div></td></tr>';return;}
+  if(!f.length){tbody.innerHTML='<tr><td colspan="9"><div class="table-empty">🌸 ไม่พบรายการ</div></td></tr>';return;}
   tbody.innerHTML=f.map((r,i)=>{
     const dc=CONFIG.DEPTS[r.deptIdx]?.color||'#f472b6';
-    const dot=activeDept===0?`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dc};margin-right:5px;vertical-align:middle"></span>`:'';
+    const dot=`<span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:${dc};margin-right:5px;"></span>`;
     return `<tr>
-      <td style="color:var(--text-sub);font-size:.78rem">${i+1}</td>
+      <td>${i+1}</td>
       <td class="cell-date">${r.date}</td>
-      <td><span class="type-badge ${r.type==='รายรับ'?'badge-in':'badge-out'}">${r.type==='รายรับ'?'💚':'❤️'} ${r.type||'-'}</span></td>
+      <td><span class="type-badge ${r.type==='รายรับ'?'badge-in':'badge-out'}">${r.type==='รายรับ'?'💚':'❤️'} ${r.type}</span></td>
       <td class="cell-name">${dot}${r.name}</td>
-      <td class="amt-in">${r.income>0?'+฿'+fmt(r.income):'<span style="color:var(--border)">—</span>'}</td>
-      <td class="amt-out">${r.expense>0?'-฿'+fmt(r.expense):'<span style="color:var(--border)">—</span>'}</td>
+      <td class="amt-in">${r.income>0?'+฿'+fmt(r.income):'—'}</td>
+      <td class="amt-out">${r.expense>0?'-฿'+fmt(r.expense):'—'}</td>
       <td class="amt-bal">฿${fmt(r.balance)}</td>
-      <td>${r.slip && r.slip.startsWith('http') ? `<a class="slip-btn" href="#" onclick="openSlip('${r.slip}',event)">🧾 สลิป</a>` : '<span class="no-slip">—</span>'}</td>
+      <td>${r.slip && r.slip.startsWith('http') ? `<a class="slip-btn" href="${r.slip}" target="_blank">🧾 สลิป</a>` : '<span class="no-slip">—</span>'}</td>
       <td class="cell-note">${r.note||'—'}</td>
     </tr>`;
   }).join('');
 }
 
-function openSlip(url,e){
-  e.preventDefault();
-  window.open(url, '_blank');
-}
-
-function exportSheet(){
-  const d=CONFIG.DEPTS[activeDept];
-  const sid=activeDept===0?CONFIG.DEPTS[1].sheetId:d.sheetId;
-  window.open(`https://docs.google.com/spreadsheets/d/${sid}/edit`,'_blank');
-}
-
-function doLogin(){
-  const pw=document.getElementById('pwInput').value;
-  if(pw===CONFIG.ADMIN_PASSWORD){isAdmin=true;sessionStorage.setItem('adminAuth','true');updateAdminUI();closeModal('loginModal');document.getElementById('pwInput').value='';}
-  else{const el=document.getElementById('loginErr');el.classList.add('show');setTimeout(()=>el.classList.remove('show'),2500);}
-}
-
-function logout(){isAdmin=false;sessionStorage.removeItem('adminAuth');updateAdminUI();}
-
-function updateAdminUI(){
-  document.getElementById('adminChip').classList.toggle('show',isAdmin);
-  document.getElementById('addBtn').style.display=isAdmin?'inline-flex':'none';
-  document.getElementById('loginBtn').style.display=isAdmin?'none':'inline-flex';
-  document.getElementById('logoutBtn').style.display=isAdmin?'inline-flex':'none';
-}
-
-function openAddModal(){
-  document.getElementById('eDate').value=todayStr();
-  ['eName','eAmount','eFile','eNote'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('addErr').classList.remove('show');
-  if(activeDept>0)document.getElementById('eDept').value=activeDept;
-  openModal('addModal');
-}
-
-/* 🔥 แก้ไขฟังก์ชันบันทึกเพื่อรองรับการอัปโหลดไฟล์และรีโหลดข้อมูล 🔥 */
 async function saveEntry(){
   const date=document.getElementById('eDate').value;
   const type=document.getElementById('eType').value;
@@ -476,59 +406,72 @@ async function saveEntry(){
   }
   
   const btn=document.getElementById('saveBtn');
-  const originalBtnText = btn.textContent;
   btn.textContent='⏳ กำลังอัปโหลดและบันทึก...';
   btn.disabled=true;
   
   try{
     const d=CONFIG.DEPTS[deptIdx];
-    const income=type==='รายรับ'?amount:0;
-    const expense=type==='รายจ่าย'?amount:0;
+    const payload = new URLSearchParams();
+    payload.append('date', date);
+    payload.append('type', type);
+    payload.append('name', name);
+    payload.append('income', type==='รายรับ'?amount:0);
+    payload.append('expense', type==='รายจ่าย'?amount:0);
+    payload.append('note', note);
+    payload.append('sheetId', d.sheetId);
+    payload.append('sheetName', d.sheetName);
 
-    const formData = new FormData();
-    formData.append('date', date);
-    formData.append('type', type);
-    formData.append('name', name);
-    formData.append('income', income);
-    formData.append('expense', expense);
-    formData.append('note', note);
-    formData.append('sheetId', d.sheetId);
-    formData.append('sheetName', d.sheetName);
-
-    // แนบไฟล์รูปภาพ
-    if(fileInput.files.length > 0) {
-      formData.append('file', fileInput.files[0]);
+    if (fileInput.files.length > 0) {
+      const file = fileInput.files[0];
+      const base64Data = await new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.readAsDataURL(file);
+      });
+      payload.append('fileBase64', base64Data);
+      payload.append('fileName', file.name);
+      payload.append('fileType', file.type);
     }
 
-    const res=await fetch(CONFIG.SCRIPT_URL, {
-      method: 'POST',
-      body: formData 
-    });
-    
+    const res=await fetch(CONFIG.SCRIPT_URL, { method: 'POST', body: payload });
     const result=await res.json();
     if(result.status==='ok'){
       closeModal('addModal');
-      // รีเฟรชข้อมูลในตารางทันที
       activeDept = deptIdx;
-      switchDept(deptIdx); 
-      await loadData(); 
+      switchDept(deptIdx);
       alert('บันทึกสำเร็จ!');
-    } else {
-      throw new Error(result.message || 'บันทึกไม่สำเร็จ');
-    }
+    } else { throw new Error(result.message); }
   }catch(e){
-    const el=document.getElementById('addErr');
-    el.textContent='❌ '+(e.message||'เกิดข้อผิดพลาดในการอัปโหลด');
-    el.classList.add('show');
+    document.getElementById('addErr').textContent='❌ '+e.message;
+    document.getElementById('addErr').classList.add('show');
   } finally {
-    btn.textContent=originalBtnText;
+    btn.textContent='💾 บันทึกและอัปโหลด';
     btn.disabled=false;
   }
 }
 
+function doLogin(){
+  const pw=document.getElementById('pwInput').value;
+  if(pw===CONFIG.ADMIN_PASSWORD){isAdmin=true;sessionStorage.setItem('adminAuth','true');updateAdminUI();closeModal('loginModal');}
+  else{document.getElementById('loginErr').classList.add('show');}
+}
+function logout(){isAdmin=false;sessionStorage.removeItem('adminAuth');updateAdminUI();}
+function updateAdminUI(){
+  document.getElementById('adminChip').classList.toggle('show',isAdmin);
+  document.getElementById('addBtn').style.display=isAdmin?'inline-flex':'none';
+  document.getElementById('loginBtn').style.display=isAdmin?'none':'inline-flex';
+  document.getElementById('logoutBtn').style.display=isAdmin?'inline-flex':'none';
+}
+function openAddModal(){
+  document.getElementById('eDate').value=todayStr();
+  ['eName','eAmount','eFile','eNote'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('addErr').classList.remove('show');
+  if(activeDept>0)document.getElementById('eDept').value=activeDept;
+  openModal('addModal');
+}
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-backdrop').forEach(el=>el.addEventListener('click',e=>{if(e.target===el)el.classList.remove('open');}));
+function exportSheet(){window.open(`https://docs.google.com/spreadsheets/d/${CONFIG.DEPTS[1].sheetId}/edit`,'_blank');}
 </script>
 </body>
 </html>
